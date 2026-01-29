@@ -7,11 +7,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func New() *gin.Engine {
+func New(articleHandler *article.ArticleHandler) *gin.Engine {
 	r := gin.Default()
 
 	health.Register(r)
-	article.Register(r)
+	articleHandler.Register(r)
 
 	return r
 }

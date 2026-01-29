@@ -1,22 +1,40 @@
 package article
 
-import "github.com/gin-gonic/gin"
+import (
+	"market-brief-be/internal/pkg/response"
 
-func Register(r *gin.Engine) {
-	r.POST("/articles/summarize", func(c *gin.Context) {
-		var req SummarizeRequest
+	"github.com/gin-gonic/gin"
+)
 
-		if err := c.BindJSON(&req); err != nil {
-			c.JSON(400, gin.H{"error": err.Error()})
-			return
-		}
+// ArticleHandler HTTP 핸들러
+type ArticleHandler struct {
+	service ArticleService
+}
 
-		result, err := Summarize(req.URL)
-		if err != nil {
-			c.JSON(500, gin.H{"error": "failed to summarize"})
-			return
-		}
+// NewArticleHandler 생성자
+func NewArticleHandler(service ArticleService) *ArticleHandler {
+	return &ArticleHandler{service: service}
+}
 
-		c.JSON(200, result)
-	})
+// Register 라우트 등록
+func (h *ArticleHandler) Register(r *gin.Engine) {
+	r.POST("/articles/summarize", h.Summarize)
+}
+
+// Summarize 기사 요약 핸들러
+func (h *ArticleHandler) Summarize(c *gin.Context) {
+	var req SummarizeRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+
+	result, err := h.service.Summarize(req.URL)
+	if err != nil {
+		response.InternalError(c, "failed to summarize article")
+		return
+	}
+
+	response.Success(c, result)
 }
