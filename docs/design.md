@@ -27,8 +27,64 @@
    └─ 티커 매핑, 관심 종목 등
 ```
 
+## 뉴스 수집 (Finnhub 연동)
+
+### 개요
+Finnhub API를 통해 실시간 시장 뉴스 및 종목별 뉴스를 수집합니다.
+
+### API 엔드포인트
+
+| 엔드포인트 | 설명 | 파라미터 |
+|-----------|------|----------|
+| `GET /news/market` | 시장 전체 뉴스 조회 | `category` (기본값: general) |
+| `GET /news/company/:symbol` | 특정 종목 뉴스 조회 | 티커 심볼 (예: AAPL, TSLA) |
+
+### 환경 변수
+
+```env
+FINNHUB_API_KEY=<your-finnhub-api-key>
+FINNHUB_BASE_URL=https://finnhub.io/api/v1  # 선택사항
+```
+
+### 아키텍처
+
+```
+cmd/server/main.go
+    └── internal/
+        ├── config/config.go      # 환경 변수 로드 (.env 지원)
+        ├── finnhub/
+        │   ├── client.go         # HTTP 클라이언트 (10초 타임아웃)
+        │   └── types.go          # MarketNews, CompanyNews 타입
+        ├── news/
+        │   ├── handler.go        # Gin 핸들러
+        │   ├── service.go        # 비즈니스 로직
+        │   └── dto.go            # 응답 DTO
+        └── router/router.go      # 라우트 등록
+```
+
+### 응답 예시
+
+```json
+{
+  "news": [
+    {
+      "id": 123456,
+      "headline": "Apple Reports Record Revenue",
+      "summary": "Apple Inc. announced...",
+      "source": "Reuters",
+      "url": "https://...",
+      "image": "https://...",
+      "datetime": 1706889600,
+      "category": "technology"
+    }
+  ]
+}
+```
+
+---
+
 ## 결정 필요 사항
 
-- [ ] 뉴스 소스: 직접 크롤링 vs 뉴스 API (네이버, 한경 등)
+- [x] 뉴스 소스: ~~직접 크롤링 vs 뉴스 API~~ → **Finnhub API 사용**
 - [ ] LLM 선택: OpenAI / Anthropic / Ollama / Gemini
 - [ ] 타겟 시장: 한국 주식 / 미국 주식 / 둘 다
